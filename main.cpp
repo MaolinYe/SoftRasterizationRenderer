@@ -1,14 +1,12 @@
-# SoftRasterizationRenderer
-不依赖第三方库的软件的光栅化渲染器
-## ① 画线
-对于给定两个点，我们需要画出两点形成的线段，像素是离散的，这就需要在两个点之间画上足够的点，取Δx和Δy中的较大者为采样率
-```c++
+#include "tgaimage.h"
+#include <iostream>
+
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
     bool xToy = false;
     if (std::abs(x0 - x1) < std::abs(y0 - y1)) {
         std::swap(x0, y0);
         std::swap(x1, y1);
-        xToy= true;
+        xToy = true;
     }
     if (x0 > x1) {
         std::swap(x0, x1);
@@ -23,9 +21,8 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
             image.set(x, y, color);
     }
 }
-```
-绘制一些简单的几何图形
-```c++
+
+int main() {
     TGAImage image(512, 512, TGAImage::RGB);
 // 绘制红色正方形
     line(100, 100, 100, 400, image, {255, 0, 0, 255});
@@ -43,5 +40,4 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
     line(200, 200, 250, 150, image, {0, 255, 0, 255});
     image.write_tga_file("result.tga");
     return 0;
-```
-![img.png](line.png)
+}
