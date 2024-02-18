@@ -1,0 +1,2 @@
+# SoftRasterizationRenderer
+不依赖第三方库的软件的光栅化渲染器
