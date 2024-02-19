@@ -17,7 +17,7 @@ Model::Model(const char *filename) {
         char trash;
         if(!line.compare(0,2,"v ")){
             iss>>trash; // 忽略字符v
-            Vec3f vertex;
+            Vector3f vertex;
             iss>>vertex.x>>vertex.y>>vertex.z;
             vertexes.push_back(vertex);
         }else if(!line.compare(0,2,"f ")){

@@ -49,45 +49,45 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
 二维向量的运算
 ```c++
 template<class T>
-struct Vec2 {
+struct Vector2 {
     T x, y;
-    Vec2() : x(0), y(0) {}
-    Vec2(T x, T y) : x(x), y(y) {}
-    Vec2<T> operator+(const Vec2<T> V) const {
-        return Vec2<T>(x + V.x, y + V.y);
+    Vector2() : x(0), y(0) {}
+    Vector2(T x, T y) : x(x), y(y) {}
+    Vector2<T> operator+(const Vector2<T> V) const {
+        return Vector2<T>(x + V.x, y + V.y);
     }
-    Vec2<T> operator-(const Vec2<T> V) const {
-        return Vec2<T>(x - V.x, y - V.y);
+    Vector2<T> operator-(const Vector2<T> V) const {
+        return Vector2<T>(x - V.x, y - V.y);
     }
-    Vec2<T> operator*(float k) const {
-        return Vec2<T>(x * k, y * k);
+    Vector2<T> operator*(float k) const {
+        return Vector2<T>(x * k, y * k);
     }
 };
-typedef Vec2<float> Vec2f;
-typedef Vec2<int> Vec2i;
+typedef Vector2<float> Vec2f;
+typedef Vector2<int> Vec2i;
 ```
 三维向量的运算
 ```c++
 template<class T>
-struct Vec3 {
+struct Vector3 {
     T x, y, z;
-    Vec3() : x(0), y(0), z(0) {}
-    Vec3(T _x, T _y, T _z) : x(_x), y(_y), z(_z) {}
-    Vec3<T> operator^(const Vec3<T> &v) const {
-        return Vec3<T>(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x);
+    Vector3() : x(0), y(0), z(0) {}
+    Vector3(T _x, T _y, T _z) : x(_x), y(_y), z(_z) {}
+    Vector3<T> operator^(const Vector3<T> &v) const {
+        return Vector3<T>(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x);
     }
-    Vec3<T> operator+(const Vec3<T> &v) const { return Vec3<T>(x + v.x, y + v.y, z + v.z); }
-    Vec3<T> operator-(const Vec3<T> &v) const { return Vec3<T>(x - v.x, y - v.y, z - v.z); }
-    Vec3<T> operator*(float f) const { return Vec3<T>(x * f, y * f, z * f); }
-    T operator*(const Vec3<T> &v) const { return x * v.x + y * v.y + z * v.z; }
+    Vector3<T> operator+(const Vector3<T> &v) const { return Vector3<T>(x + v.x, y + v.y, z + v.z); }
+    Vector3<T> operator-(const Vector3<T> &v) const { return Vector3<T>(x - v.x, y - v.y, z - v.z); }
+    Vector3<T> operator*(float f) const { return Vector3<T>(x * f, y * f, z * f); }
+    T operator*(const Vector3<T> &v) const { return x * v.x + y * v.y + z * v.z; }
     float norm() const { return std::sqrt(x * x + y * y + z * z); }
-    Vec3<T> &normalize(T l = 1) {
+    Vector3<T> &normalize(T l = 1) {
         *this = (*this) * (l / norm());
         return *this;
     }
 };
-typedef Vec3<float> Vec3f;
-typedef Vec3<int> Vec3i;
+typedef Vector3<float> Vec3f;
+typedef Vector3<int> Vec3i;
 ```
 ### 读取模型文件
 这里先只读取模型的三角形坐标，纹理和法线后面再用
@@ -146,3 +146,70 @@ public:
 ```
 ![img.png](outputPictures/modelLine.png)
 ![img.png](outputPictures/bodyLine.png)
+## ③ 三角形绘色 Z-buffer深度缓冲
+即给三角形内的点上色，games101里面通过叉乘来判断一个点是否在一个多边形内部，如果AP×AB和BP×BC和CP×CA的方向是一样的，那么这个P点就在三角形内部，为了方便后续计算，这里使用计算点的重心坐标来判断点是否在三角形内，如果计算出来的重心坐标非负说明点在三角形内，这里使用简化的三角形面积比来计算重心坐标
+```c++
+std::tuple<float, float, float> computeBarycentric2D(float x, float y, Vector3f *v){
+    float c1 = (x*(v[1].y - v[2].y) + (v[2].x - v[1].x)*y + v[1].x*v[2].y - v[2].x*v[1].y) / (v[0].x*(v[1].y - v[2].y) + (v[2].x - v[1].x)*v[0].y + v[1].x*v[2].y - v[2].x*v[1].y);
+    float c2 = (x*(v[2].y - v[0].y) + (v[0].x - v[2].x)*y + v[2].x*v[0].y - v[0].x*v[2].y) / (v[1].x*(v[2].y - v[0].y) + (v[0].x - v[2].x)*v[1].y + v[2].x*v[0].y - v[0].x*v[2].y);
+    float c3 = (x*(v[0].y - v[1].y) + (v[1].x - v[0].x)*y + v[0].x*v[1].y - v[1].x*v[0].y) / (v[2].x*(v[0].y - v[1].y) + (v[1].x - v[0].x)*v[2].y + v[0].x*v[1].y - v[1].x*v[0].y);
+    return {c1,c2,c3};
+}
+```
+用一个矩形框作为三角形的包围盒，遍历包围盒里面的像素是否在三角形内，并使用深度缓冲来更新像素的深度
+```c++
+void triangle(Vector3f*v,float*depth_buffer,TGAImage&image,TGAColor color){
+    int minx=std::min(v[0].x,std::min(v[1].x,v[2].x));
+    int miny=std::min(v[0].y,std::min(v[1].y,v[2].y));
+    int maxX=std::max(v[0].x,std::max(v[1].x,v[2].x));
+    int maxY=std::max(v[0].y,std::max(v[1].y,v[2].y));
+    for(int x=minx;x<=maxX;x++){
+        for(int y=miny;y<=maxY;y++){
+            auto[alpha, beta, gamma] = computeBarycentric2D(x,y,v);
+            if(alpha>=0&&beta>=0&&gamma>=0){
+                float depth=alpha*v[0].z+beta*v[1].z+gamma*v[2].z;
+                if(depth>depth_buffer[x*width+y]){
+                    depth_buffer[x*width+y]=depth;
+                    image.set(x,y,color);
+                }
+            }
+        }
+    }
+}
+```
+增加坐标转换和叉乘函数
+```c++
+Vector3f mvp(Vector3f v){
+    return {(v.x+1)/2*width,(v.y+1)/2*height,v.z};
+}
+Vector3f crossProduct(Vector3f v1,Vector3f v2){
+    return {v1.y*v2.z - v1.z*v2.y, v1.z*v2.x - v1.x*v2.z, v1.x*v2.y - v1.y*v2.x};
+}
+```
+固定光照，计算每个三角形面的法线，计算高光
+```c++
+    width=512,height=512;
+    TGAImage image(width, height, TGAImage::RGB);
+    Model model(R"(C:\Users\v_maolinye\Desktop\SoftRasterizationRenderer\obj\african_head.obj)");
+    auto*depth_buffer=new float[width*height];
+    for(int i=0;i<width*height;i++){
+    depth_buffer[i]=-std::numeric_limits<float>::max();
+    }
+    Vector3f light_direction(0,0,-1);
+    for(auto&t:model.triangles){
+    Vector3f v[3],mvp_v[3];
+    for(int i=0;i<3;i++){
+    v[i]=model.vertexes[t[i]];
+    mvp_v[i]= mvp(v[i]);
+    }
+    Vector3f normal= crossProduct(v[2]-v[0],v[1]-v[0]);
+    float light_intensity=normal.normalize()*light_direction;
+    if(light_intensity<0)
+    light_intensity=-light_intensity;
+    std::uint8_t color=light_intensity * 255;
+    triangle(mvp_v,depth_buffer,image,{color,color,color, 255});
+    }
+    image.write_tga_file("result.tga");
+    return 0;
+```
+![img.png](outputPictures/depth_buffer.png)

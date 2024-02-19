@@ -5,41 +5,41 @@
 #include <iostream>
 
 template<class T>
-struct Vec2 {
+struct Vector2 {
     T x, y;
-    Vec2() : x(0), y(0) {}
-    Vec2(T x, T y) : x(x), y(y) {}
-    Vec2<T> operator+(const Vec2<T> V) const {
-        return Vec2<T>(x + V.x, y + V.y);
+    Vector2() : x(0), y(0) {}
+    Vector2(T x, T y) : x(x), y(y) {}
+    Vector2<T> operator+(const Vector2<T> V) const {
+        return Vector2<T>(x + V.x, y + V.y);
     }
-    Vec2<T> operator-(const Vec2<T> V) const {
-        return Vec2<T>(x - V.x, y - V.y);
+    Vector2<T> operator-(const Vector2<T> V) const {
+        return Vector2<T>(x - V.x, y - V.y);
     }
-    Vec2<T> operator*(float k) const {
-        return Vec2<T>(x * k, y * k);
+    Vector2<T> operator*(float k) const {
+        return Vector2<T>(x * k, y * k);
     }
 };
-typedef Vec2<float> Vec2f;
-typedef Vec2<int> Vec2i;
+typedef Vector2<float> Vector2f;
+typedef Vector2<int> Vector2i;
 
 template<class T>
-struct Vec3 {
+struct Vector3 {
     T x, y, z;
-    Vec3() : x(0), y(0), z(0) {}
-    Vec3(T _x, T _y, T _z) : x(_x), y(_y), z(_z) {}
-    Vec3<T> operator^(const Vec3<T> &v) const {
-        return Vec3<T>(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x);
+    Vector3() : x(0), y(0), z(0) {}
+    Vector3(T _x, T _y, T _z) : x(_x), y(_y), z(_z) {}
+    Vector3<T> operator^(const Vector3<T> &v) const {
+        return Vector3<T>(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x);
     }
-    Vec3<T> operator+(const Vec3<T> &v) const { return Vec3<T>(x + v.x, y + v.y, z + v.z); }
-    Vec3<T> operator-(const Vec3<T> &v) const { return Vec3<T>(x - v.x, y - v.y, z - v.z); }
-    Vec3<T> operator*(float f) const { return Vec3<T>(x * f, y * f, z * f); }
-    T operator*(const Vec3<T> &v) const { return x * v.x + y * v.y + z * v.z; }
+    Vector3<T> operator+(const Vector3<T> &v) const { return Vector3<T>(x + v.x, y + v.y, z + v.z); }
+    Vector3<T> operator-(const Vector3<T> &v) const { return Vector3<T>(x - v.x, y - v.y, z - v.z); }
+    Vector3<T> operator*(float f) const { return Vector3<T>(x * f, y * f, z * f); }
+    T operator*(const Vector3<T> &v) const { return x * v.x + y * v.y + z * v.z; }
     float norm() const { return std::sqrt(x * x + y * y + z * z); }
-    Vec3<T> &normalize(T l = 1) {
+    Vector3<T> &normalize(T l = 1) {
         *this = (*this) * (l / norm());
         return *this;
     }
 };
-typedef Vec3<float> Vec3f;
-typedef Vec3<int> Vec3i;
+typedef Vector3<float> Vector3f;
+typedef Vector3<int> Vector3i;
 #endif //SOFTRASTERIZATIONRENDERER_GEOMETRY_H
