@@ -1,6 +1,6 @@
 #include "tgaimage.h"
 #include <iostream>
-
+#include "model.h"
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
     bool xToy = false;
     if (std::abs(x0 - x1) < std::abs(y0 - y1)) {
@@ -23,21 +23,20 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
 }
 
 int main() {
-    TGAImage image(512, 512, TGAImage::RGB);
-// 绘制红色正方形
-    line(100, 100, 100, 400, image, {255, 0, 0, 255});
-    line(100, 400, 400, 400, image, {255, 0, 0, 255});
-    line(400, 400, 400, 100, image, {255, 0, 0, 255});
-    line(400, 100, 100, 100, image, {255, 0, 0, 255});
-// 绘制蓝色三角形
-    line(200, 200, 300, 200, image, {0, 0, 255, 255});
-    line(300, 200, 250, 300, image, {0, 0, 255, 255});
-    line(250, 300, 200, 200, image, {0, 0, 255, 255});
-// 绘制绿色菱形
-    line(250, 150, 300, 200, image, {0, 255, 0, 255});
-    line(300, 200, 250, 250, image, {0, 255, 0, 255});
-    line(250, 250, 200, 200, image, {0, 255, 0, 255});
-    line(200, 200, 250, 150, image, {0, 255, 0, 255});
+    int width=512,height=512;
+    TGAImage image(width, height, TGAImage::RGB);
+    Model model(R"(C:\Users\v_maolinye\Desktop\SoftRasterizationRenderer\obj\body.obj)");
+    for(auto&triangle:model.triangles){
+        for(int i=0;i<3;i++){
+            auto v0=model.vertexes[triangle[i]];
+            auto v1=model.vertexes[triangle[(i+1)%3]];
+            int x0=(v0.x+1)*width/2;
+            int y0=(v0.y+1)*height/2;
+            int x1=(v1.x+1)*width/2;
+            int y1=(v1.y+1)*height/2;
+            line(x0,y0,x1,y1,image,{255,255,255,255});
+        }
+    }
     image.write_tga_file("result.tga");
     return 0;
 }

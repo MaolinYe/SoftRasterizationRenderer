@@ -8,7 +8,7 @@ bool TGAImage::read_tga_file(const std::string filename) {
     std::ifstream in;
     in.open(filename, std::ios::binary);
     if (!in.is_open()) {
-        std::cerr << "can't open file " << filename << "\n";
+        std::cerr << "can'T open file " << filename << "\n";
         return false;
     }
     TGAHeader header;
@@ -105,7 +105,7 @@ bool TGAImage::write_tga_file(const std::string filename, const bool vflip, cons
     std::ofstream out;
     out.open(filename, std::ios::binary);
     if (!out.is_open()) {
-        std::cerr << "can't open file " << filename << "\n";
+        std::cerr << "can'T open file " << filename << "\n";
         return false;
     }
     TGAHeader header = {};
@@ -116,32 +116,32 @@ bool TGAImage::write_tga_file(const std::string filename, const bool vflip, cons
     header.imagedescriptor = vflip ? 0x00 : 0x20; // top-left or bottom-left origin
     out.write(reinterpret_cast<const char *>(&header), sizeof(header));
     if (!out.good()) {
-        std::cerr << "can't dump the tga file\n";
+        std::cerr << "can'T dump the tga file\n";
         return false;
     }
     if (!rle) {
         out.write(reinterpret_cast<const char *>(data.data()), w*h*bpp);
         if (!out.good()) {
-            std::cerr << "can't unload raw data\n";
+            std::cerr << "can'T unload raw data\n";
             return false;
         }
     } else if (!unload_rle_data(out)) {
-            std::cerr << "can't unload rle data\n";
+            std::cerr << "can'T unload rle data\n";
             return false;
         }
     out.write(reinterpret_cast<const char *>(developer_area_ref), sizeof(developer_area_ref));
     if (!out.good()) {
-        std::cerr << "can't dump the tga file\n";
+        std::cerr << "can'T dump the tga file\n";
         return false;
     }
     out.write(reinterpret_cast<const char *>(extension_area_ref), sizeof(extension_area_ref));
     if (!out.good()) {
-        std::cerr << "can't dump the tga file\n";
+        std::cerr << "can'T dump the tga file\n";
         return false;
     }
     out.write(reinterpret_cast<const char *>(footer), sizeof(footer));
     if (!out.good()) {
-        std::cerr << "can't dump the tga file\n";
+        std::cerr << "can'T dump the tga file\n";
         return false;
     }
     return true;
@@ -175,12 +175,12 @@ bool TGAImage::unload_rle_data(std::ofstream &out) const {
         curpix += run_length;
         out.put(raw?run_length-1:run_length+127);
         if (!out.good()) {
-            std::cerr << "can't dump the tga file\n";
+            std::cerr << "can'T dump the tga file\n";
             return false;
         }
         out.write(reinterpret_cast<const char *>(data.data()+chunkstart), (raw?run_length*bpp:bpp));
         if (!out.good()) {
-            std::cerr << "can't dump the tga file\n";
+            std::cerr << "can'T dump the tga file\n";
             return false;
         }
     }
