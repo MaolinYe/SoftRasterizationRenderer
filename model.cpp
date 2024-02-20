@@ -24,20 +24,29 @@ Model::Model(const char *filename) {
             iss>>trash; // 忽略字符f
             std::vector<int>triangle;
             std::vector<int>triangle_textures;
-            int vIndex,tIndex,nIndex; // 顶点坐标索引、纹理坐标索引、面法线坐标索引
+            std::vector<int>triangle_normals;
+            int vIndex,tIndex,nIndex; // 顶点坐标索引、纹理坐标索引、点法线坐标索引
             while(iss>>vIndex>>trash>>tIndex>>trash>>nIndex){ // 忽略字符/
                 vIndex--;
                 triangle.emplace_back(vIndex);
                 tIndex--;
                 triangle_textures.emplace_back(tIndex);
+                nIndex--;
+                triangle_normals.emplace_back(nIndex);
             }
             triangles.push_back(triangle);
             triangles_textures.push_back(triangle_textures);
+            triangles_normals.push_back(triangle_normals);
         }else if(!line.compare(0,3,"vt ")){
             iss>>trash>>trash;
             Vector2f texture;
             iss>>texture.x>>texture.y;
             textures.push_back(texture);
+        }else if(!line.compare(0,3,"vn ")){
+            iss>>trash>>trash;
+            Vector3f  normal;
+            iss>>normal.x>>normal.y>>normal.z;
+            normals.push_back(normal);
         }
     }
 }

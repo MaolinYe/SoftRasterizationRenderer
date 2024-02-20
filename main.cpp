@@ -3,6 +3,7 @@
 #include <tuple>
 #include "model.h"
 int width,height;
+Vector3f light_direction(0,0,-1);
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
     bool xToy = false;
     if (std::abs(x0 - x1) < std::abs(y0 - y1)) {
@@ -29,7 +30,7 @@ std::tuple<float, float, float> computeBarycentric2D(float x, float y, Vector3f 
     float c3 = (x*(v[0].y - v[1].y) + (v[1].x - v[0].x)*y + v[0].x*v[1].y - v[1].x*v[0].y) / (v[2].x*(v[0].y - v[1].y) + (v[1].x - v[0].x)*v[2].y + v[0].x*v[1].y - v[1].x*v[0].y);
     return {c1,c2,c3};
 }
-void triangle(Vector3f*v,float*depth_buffer,TGAImage&image,float l_i,Vector2f*texture_uv,TGAImage&texture_image){
+void triangle(Vector3f*v,float*depth_buffer,TGAImage&image,Vector3f *normals,Vector2f*texture_uv,TGAImage&texture_image){
     int minx=std::min(v[0].x,std::min(v[1].x,v[2].x));
     int miny=std::min(v[0].y,std::min(v[1].y,v[2].y));
     int maxX=std::max(v[0].x,std::max(v[1].x,v[2].x));
@@ -43,6 +44,10 @@ void triangle(Vector3f*v,float*depth_buffer,TGAImage&image,float l_i,Vector2f*te
                     depth_buffer[x*width+y]=depth;
                     Vector2f uv=texture_uv[0]*alpha+texture_uv[1]*beta+texture_uv[2]*gamma;
                     TGAColor color=texture_image.get(uv.x,uv.y);
+                    Vector3f normal=normals[0]*alpha+normals[1]*beta+normals[2]*gamma;
+                    float l_i=normal*light_direction;
+                    if(l_i<0)
+                        l_i=-l_i;
                     image.set(x,y,color*l_i);
                 }
             }
@@ -64,19 +69,16 @@ int main() {
     for(int i=0;i<width*height;i++){
         depth_buffer[i]=-std::numeric_limits<float>::max();
     }
-    Vector3f light_direction(0,0,-1);
     for(int j=0;j<model.triangles.size();j++){
-        Vector3f v[3],mvp_v[3];
+        Vector3f vertex[3],mvp_v[3],normal[3];
         Vector2f uv[3];
         for(int i=0;i<3;i++){
-            v[i]=model.vertexes[model.triangles[j][i]];
-            mvp_v[i]= mvp(v[i]);
+            vertex[i]=model.vertexes[model.triangles[j][i]];
+            mvp_v[i]= mvp(vertex[i]);
             uv[i]=model.textures[model.triangles_textures[j][i]];
+            normal[i]=model.normals[model.triangles_normals[j][i]];
         }
-        Vector3f normal= crossProduct(v[2]-v[0],v[1]-v[0]);
-        float light_intensity=normal.normalize()*light_direction;
-        if(light_intensity>0)
-        triangle(mvp_v,depth_buffer,image,light_intensity,uv,model.texture_image);
+        triangle(mvp_v, depth_buffer, image, normal, uv, model.texture_image);
     }
     image.write_tga_file("result.tga");
     return 0;

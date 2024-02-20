@@ -9,6 +9,8 @@ public:
     std::vector<std::vector<int> > triangles; // 存储三角形的顶点索引
     std::vector<Vector2f> textures; // 存储纹理坐标
     std::vector<std::vector<int> >triangles_textures; // 存储三角形的顶点纹理坐标索引
+    std::vector<Vector3f> normals; // 存储法线
+    std::vector<std::vector<int> >triangles_normals; // 存储三角形的顶点法线索引
     TGAImage texture_image;
     void load_texture(const char * filename);
     explicit Model(const char *filename);

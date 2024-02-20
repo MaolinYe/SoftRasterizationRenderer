@@ -269,3 +269,50 @@ void Model::load_texture(const char *filename) {
 ```
 ![img.png](outputPictures/head_texture.png)
 ![img.png](outputPictures/monster_texture.png)
+## ⑤ 高洛德着色 Gouraud shading
+之前用的平面着色，现在增加读取模型顶点的法线，使用插值计算三角形内每个像素点的法线，再计算光照效果
+```c++
+            auto[alpha, beta, gamma] = computeBarycentric2D(x,y,v);
+            if(alpha>=0&&beta>=0&&gamma>=0){
+                float depth=alpha*v[0].z+beta*v[1].z+gamma*v[2].z;
+                if(depth>depth_buffer[x*width+y]){
+                    depth_buffer[x*width+y]=depth;
+                    Vector2f uv=texture_uv[0]*alpha+texture_uv[1]*beta+texture_uv[2]*gamma;
+                    TGAColor color=texture_image.get(uv.x,uv.y);
+                    Vector3f normal=normals[0]*alpha+normals[1]*beta+normals[2]*gamma;
+                    float l_i=normal*light_direction;
+                    if(l_i<0)
+                        l_i=-l_i;
+                    image.set(x,y,color*l_i);
+                }
+            }
+```
+使用
+```c++
+    width=1024,height=1024;
+    TGAImage image(width, height, TGAImage::RGB);
+    Model model(R"(C:\Users\v_maolinye\Desktop\SoftRasterizationRenderer\obj\diablo3_pose.obj)");
+    model.load_texture(R"(C:\Users\v_maolinye\Desktop\SoftRasterizationRenderer\texture\diablo3_pose_diffuse.tga)");
+    auto*depth_buffer=new float[width*height];
+    for(int i=0;i<width*height;i++){
+        depth_buffer[i]=-std::numeric_limits<float>::max();
+    }
+    for(int j=0;j<model.triangles.size();j++){
+        Vector3f vertex[3],mvp_v[3],normal[3];
+        Vector2f uv[3];
+        for(int i=0;i<3;i++){
+            vertex[i]=model.vertexes[model.triangles[j][i]];
+            mvp_v[i]= mvp(vertex[i]);
+            uv[i]=model.textures[model.triangles_textures[j][i]];
+            normal[i]=model.normals[model.triangles_normals[j][i]];
+        }
+        triangle(mvp_v, depth_buffer, image, normal, uv, model.texture_image);
+    }
+    image.write_tga_file("result.tga");
+    return 0;
+```
+![img.png](outputPictures/monster_Gouraud.png)
+bug图片，没有对计算出来的光照强度纠正
+![img.png](outputPictures/monster_Gouraud_minus.png)
+bug图片，对计算出来的负光照强度取补
+![img.png](outputPictures/monster_Gouraud_minus_mod.png)
