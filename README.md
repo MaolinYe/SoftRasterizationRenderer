@@ -146,7 +146,7 @@ public:
 ```
 ![img.png](outputPictures/modelLine.png)
 ![img.png](outputPictures/bodyLine.png)
-## ③ 三角形绘色 Z-buffer深度缓冲
+## ③ 平面着色 Z-buffer深度缓冲
 即给三角形内的点上色，games101里面通过叉乘来判断一个点是否在一个多边形内部，如果AP×AB和BP×BC和CP×CA的方向是一样的，那么这个P点就在三角形内部，为了方便后续计算，这里使用计算点的重心坐标来判断点是否在三角形内，如果计算出来的重心坐标非负说明点在三角形内，这里使用简化的三角形面积比来计算重心坐标
 ```c++
 std::tuple<float, float, float> computeBarycentric2D(float x, float y, Vector3f *v){
@@ -213,3 +213,59 @@ Vector3f crossProduct(Vector3f v1,Vector3f v2){
     return 0;
 ```
 ![img.png](outputPictures/depth_buffer.png)
+![img.png](outputPictures/depth_buffer_monster.png)
+## ④ 纹理映射
+增加读取模型中的纹理坐标，需要将坐标恢复到width×height空间
+```c++
+void Model::load_texture(const char *filename) {
+    texture_image.read_tga_file(filename);
+    texture_image.flip_vertically();
+    int width=texture_image.width(),height=texture_image.height();
+    for(auto&one:textures){
+        one.x=one.x*width;
+        one.y=one.y*height;
+    }
+}
+```
+只有顶点的纹理坐标，三角形内点需要通过重心坐标插值计算
+```c++
+            auto[alpha, beta, gamma] = computeBarycentric2D(x,y,v);
+            if(alpha>=0&&beta>=0&&gamma>=0){
+                float depth=alpha*v[0].z+beta*v[1].z+gamma*v[2].z;
+                if(depth>depth_buffer[x*width+y]){
+                    depth_buffer[x*width+y]=depth;
+                    Vector2f uv=texture_uv[0]*alpha+texture_uv[1]*beta+texture_uv[2]*gamma;
+                    TGAColor color=texture_image.get(uv.x,uv.y);
+                    image.set(x,y,color*l_i);
+                }
+            }
+```
+使用
+```c++
+    width=1024,height=1024;
+    TGAImage image(width, height, TGAImage::RGB);
+    Model model(R"(C:\Users\v_maolinye\Desktop\SoftRasterizationRenderer\obj\diablo3_pose.obj)");
+    model.load_texture(R"(C:\Users\v_maolinye\Desktop\SoftRasterizationRenderer\texture\diablo3_pose_diffuse.tga)");
+    auto*depth_buffer=new float[width*height];
+    for(int i=0;i<width*height;i++){
+        depth_buffer[i]=-std::numeric_limits<float>::max();
+    }
+    Vector3f light_direction(0,0,-1);
+    for(int j=0;j<model.triangles.size();j++){
+        Vector3f v[3],mvp_v[3];
+        Vector2f uv[3];
+        for(int i=0;i<3;i++){
+            v[i]=model.vertexes[model.triangles[j][i]];
+            mvp_v[i]= mvp(v[i]);
+            uv[i]=model.textures[model.triangles_textures[j][i]];
+        }
+        Vector3f normal= crossProduct(v[2]-v[0],v[1]-v[0]);
+        float light_intensity=normal.normalize()*light_direction;
+        if(light_intensity>0)
+        triangle(mvp_v,depth_buffer,image,light_intensity,uv,model.texture_image);
+    }
+    image.write_tga_file("result.tga");
+    return 0;
+```
+![img.png](outputPictures/head_texture.png)
+![img.png](outputPictures/monster_texture.png)
