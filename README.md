@@ -316,3 +316,16 @@ bug图片，没有对计算出来的光照强度纠正
 ![img.png](outputPictures/monster_Gouraud_minus.png)
 bug图片，对计算出来的负光照强度取补
 ![img.png](outputPictures/monster_Gouraud_minus_mod.png)
+## ⑥ Blinn-Phong反射模型
+计算环境光、漫反射光和高光部分，其中高光部分采用半程向量进行计算，注意加成后颜色值可能会超过255而舍弃高位变色，不能先加再比较大小，因为本身无法存储的下溢出的结果
+```c++
+                    float l_i=normal*light_direction;
+                    Vector3f half=(light_direction+camera_direction).normalize(); // 半程向量
+                    float nh=normal*half;
+                    float ka=10,kd=1,ks=1;
+                    std::uint8_t ambient=ka*1;
+                    TGAColor diffuse=color*std::max(l_i,-l_i)*kd;
+                    std::uint8_t specular=255*ks*std::pow(std::max(nh,-nh),50);
+                    image.set(x,y,diffuse+specular+ambient);
+```
+![img.png](outputPictures/Blinn_Phong.png)

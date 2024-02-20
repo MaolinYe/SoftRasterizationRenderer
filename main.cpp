@@ -4,6 +4,7 @@
 #include "model.h"
 int width,height;
 Vector3f light_direction(0,0,-1);
+Vector3f camera_direction(0,0,-1);
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
     bool xToy = false;
     if (std::abs(x0 - x1) < std::abs(y0 - y1)) {
@@ -46,9 +47,13 @@ void triangle(Vector3f*v,float*depth_buffer,TGAImage&image,Vector3f *normals,Vec
                     TGAColor color=texture_image.get(uv.x,uv.y);
                     Vector3f normal=normals[0]*alpha+normals[1]*beta+normals[2]*gamma;
                     float l_i=normal*light_direction;
-                    if(l_i<0)
-                        l_i=-l_i;
-                    image.set(x,y,color*l_i);
+                    Vector3f half=(light_direction+camera_direction).normalize(); // 半程向量
+                    float nh=normal*half;
+                    float ka=10,kd=1,ks=1;
+                    std::uint8_t ambient=ka*1;
+                    TGAColor diffuse=color*std::max(l_i,-l_i)*kd;
+                    std::uint8_t specular=255*ks*std::pow(std::max(nh,-nh),50);
+                    image.set(x,y,diffuse+specular+ambient);
                 }
             }
         }

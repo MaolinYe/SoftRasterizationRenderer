@@ -2,7 +2,6 @@
 #include <cstdint>
 #include <fstream>
 #include <vector>
-
 #pragma pack(push,1)
 struct TGAHeader {
     std::uint8_t  idlength = 0;
@@ -25,7 +24,20 @@ struct TGAColor {
     std::uint8_t bytespp = 4;
     std::uint8_t& operator[](const int i) { return bgra[i]; }
     TGAColor operator*(float k)const{
-        return {static_cast<uint8_t>(bgra[0]*k),static_cast<uint8_t>(bgra[1]*k),static_cast<uint8_t>(bgra[2]*k),bgra[3]};
+        TGAColor tgaColor=*this;
+        for(auto&it:tgaColor.bgra)
+            it*=k;
+        return tgaColor;
+    }
+    TGAColor operator+(std::uint8_t color){
+        TGAColor tgaColor=*this;
+        for(auto&it:tgaColor.bgra){
+            if(it+color>255)
+                it=255;
+            else
+                it+=color;
+        }
+        return tgaColor;
     }
 };
 
