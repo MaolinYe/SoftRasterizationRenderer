@@ -1,6 +1,6 @@
 # SoftRasterizationRenderer 不依赖第三方库的软件的光栅化渲染器
 使用TGA图像，实现点、线、三角形、面的绘制  
-实现向量运算、模型读取、坐标系转换、光栅化
+实现向量运算、模型读取、坐标系转换、光栅化  
 实现平面着色、像素着色、深度缓存、纹理映射、Blinn-Phong反射模型
 ![img.png](outputPictures/Blinn_Phong.png)
 ## ① 画线
