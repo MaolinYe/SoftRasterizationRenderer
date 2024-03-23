@@ -1,5 +1,8 @@
-# SoftRasterizationRenderer
-不依赖第三方库的软件的光栅化渲染器
+# SoftRasterizationRenderer 不依赖第三方库的软件的光栅化渲染器
+使用TGA图像，实现点、线、三角形、面的绘制  
+实现向量运算、模型读取、坐标系转换、光栅化
+实现平面着色、像素着色、深度缓存、纹理映射、Blinn-Phong反射模型
+![img.png](outputPictures/Blinn_Phong.png)
 ## ① 画线
 对于给定两个点，我们需要画出两点形成的线段，像素是离散的，这就需要在两个点之间画上足够的点，取Δx和Δy中的较大者为采样率
 ```c++
@@ -269,7 +272,7 @@ void Model::load_texture(const char *filename) {
 ```
 ![img.png](outputPictures/head_texture.png)
 ![img.png](outputPictures/monster_texture.png)
-## ⑤ 高洛德着色 Gouraud shading
+## ⑤ 像素着色 Phong shading
 之前用的平面着色，现在增加读取模型顶点的法线，使用插值计算三角形内每个像素点的法线，再计算光照效果
 ```c++
             auto[alpha, beta, gamma] = computeBarycentric2D(x,y,v);
